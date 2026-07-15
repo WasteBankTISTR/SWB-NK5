@@ -749,7 +749,7 @@
 // ════════════════════════════════════════════════════════════════════════
 
 // 🔧 วาง URL /exec ของคุณตรงนี้ (เส้นเดียวกับที่ใช้ทดสอบใน test.html)
-var API_URL = "https://script.google.com/macros/s/AKfycbwcQG-jfQD9wTPBGmOSPj3cqM_WBLRRr51_zYsfGxXrBsCCEowtswKoMkbxw9EerLwN/exec";
+var API_URL = "https://script.google.com/macros/s/AKfycby9U27OEhROuF1Cs-bL-5yGwsozU4ovsgvbuIlzs21Cdx1d2NKDsFWAj7qPdZa1c8aS/exec";
 
 function apiFetch(action, data) {
   data = data || {};
@@ -1789,7 +1789,8 @@ function searchMemberFor(context, force) {
     callServer('searchMember', { query: query, zone: sendZone, room: room, historyOnly: (context === 'history') }, function(r) {
       if (!r.success) return;
       var list = r.data;
-      if (levelClasses) { var aset = {}; levelClasses.forEach(function(c) { aset[c] = true; }); list = list.filter(function(m) { return aset[m.classLabel]; }); }
+      if (levelClasses && levelClasses.length) { var aset = {}; levelClasses.forEach(function(c) { aset[c] = true; }); list = list.filter(function(m) { return aset[m.classLabel]; }); }
+      else if (levelClasses) { list = list.filter(function(m) { return m.zone === zone; }); }   // [staff-fix] ระดับไม่มีชั้น (บุคลากร/ครู) → กรองด้วยโซน (กัน aset ว่างตัดทุกคนทิ้ง)
       var html = list.map(function(m) {
         var cls = m.classLabel ? (' · ' + esc(m.classLabel)) : '';
         var no = (m.classNo !== undefined && m.classNo !== null && String(m.classNo) !== '') ? ((PROFILE.enableClassNo ? ' เลขที่ ' : ' เลขสมาชิก ') + esc(m.classNo)) : '';
