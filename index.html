@@ -1776,7 +1776,8 @@ function searchMemberFor(context, force) {
   var room = roomEl ? roomEl.value : '';
   var scoped = !!(APP.scopeFilters && APP.scopeFilters.scoped);
   var hasFilter = !!(zone || room);
-  if (!force && query.length < 2 && !hasFilter && !/^\d+$/.test(query)) { document.getElementById(context + 'SearchResults').innerHTML = ''; return; }
+  var browse = (!force && query.length === 0 && !hasFilter);   // [browse] ทุกระดับ+ทุกห้อง ไม่พิมพ์ → โชว์ 5 คนแรก (ยกเว้น auto-load ของ scoped ที่ force)
+  if (!force && !browse && query.length < 2 && !hasFilter && !/^\d+$/.test(query)) { document.getElementById(context + 'SearchResults').innerHTML = ''; return; }
   // [v1.7.4] scoped: ไม่ส่ง "ระดับ" (ชื่อที่เดาขึ้น ไม่ตรงคอลัมน์ ZONE) ไป server — ใช้กรอง "ชั้น" ฝั่ง client แทน
   var sendZone = scoped ? '' : zone;
   var levelClasses = null;
@@ -1786,7 +1787,7 @@ function searchMemberFor(context, force) {
   }
   clearTimeout(_searchTimer);
   _searchTimer = setTimeout(function() {
-    callServer('searchMember', { query: query, zone: sendZone, room: room, historyOnly: (context === 'history') }, function(r) {
+    callServer('searchMember', { query: query, zone: sendZone, room: room, historyOnly: (context === 'history'), browse: browse }, function(r) {
       if (!r.success) return;
       var list = r.data;
       if (levelClasses && levelClasses.length) { var aset = {}; levelClasses.forEach(function(c) { aset[c] = true; }); list = list.filter(function(m) { return aset[m.classLabel]; }); }
@@ -1801,7 +1802,8 @@ function searchMemberFor(context, force) {
           '<div class="list-title">' + esc(m.fullName) + cls + no + '</div>' +
           '<div class="list-subtitle">' + PROFILE.idLabel + ' ' + esc(m.houseNo) + zoneSeg + ' | ฿' + (m.balance||0).toLocaleString() + ' | ' + (m.points||0).toLocaleString() + ' แต้ม</div></div>';
       }).join('');
-      document.getElementById(context + 'SearchResults').innerHTML = html || (force ? '' : '<div style="padding:14px;color:#999">ไม่พบ' + PROFILE.subjectWord + '</div>');
+      var _bnote = (browse && list.length) ? '<div style="padding:8px 14px;color:#999;font-size:12px;text-align:center">แสดง ' + list.length + ' คนแรก · พิมพ์ชื่อ/รหัสเพื่อค้นหาเพิ่มเติม</div>' : '';
+      document.getElementById(context + 'SearchResults').innerHTML = (html + _bnote) || (force ? '' : '<div style="padding:14px;color:#999">ไม่พบ' + PROFILE.subjectWord + '</div>');
     });
   }, 300);
 }
